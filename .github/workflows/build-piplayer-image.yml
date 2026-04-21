@@ -21,7 +21,13 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y rsync
+          sudo apt-get install -y rsync qemu-user-static binfmt-support
+
+      - name: Enable QEMU binfmt
+        run: |
+          sudo update-binfmts --enable qemu-arm || true
+          sudo update-binfmts --enable qemu-aarch64 || true
+          sudo docker run --rm --privileged tonistiigi/binfmt --install all
 
       - name: Build image
         id: build
