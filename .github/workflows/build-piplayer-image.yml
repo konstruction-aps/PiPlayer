@@ -21,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y rsync qemu-user-static binfmt-support
+          sudo apt-get install -y rsync qemu-user-static binfmt-support debootstrap dosfstools xz-utils zip unzip libarchive-tools parted quilt
 
       - name: Enable QEMU binfmt
         run: |
@@ -32,6 +32,8 @@ jobs:
       - name: Build image
         id: build
         continue-on-error: true
+        env:
+          PIPLAYER_BUILD_MODE: direct
         run: |
           mkdir -p image-builder/work
           chmod +x image-builder/build-image.sh

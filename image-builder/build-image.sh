@@ -14,19 +14,26 @@ WORK_DIR="${SCRIPT_DIR}/work"
 PIGEN_DIR="${WORK_DIR}/pi-gen"
 STAGE_DIR="${PIGEN_DIR}/stage5"
 OUT_DIR="${WORK_DIR}/deploy"
+BUILD_MODE="${PIPLAYER_BUILD_MODE:-docker}"
 
 if [[ "$(uname -s)" != "Linux" ]]; then
-  echo "This builder needs Linux + Docker."
+  echo "This builder needs Linux."
   echo "Tip: run it in a Linux VM, GitHub Actions, or a Linux host."
   exit 1
 fi
 
-for cmd in git docker rsync; do
+for cmd in git rsync; do
   if ! command -v "${cmd}" >/dev/null 2>&1; then
     echo "Missing required command: ${cmd}"
     exit 1
   fi
 done
+
+if [[ "${BUILD_MODE}" == "docker" ]] && ! command -v docker >/dev/null 2>&1; then
+  echo "Missing required command for docker mode: docker"
+  echo "Set PIPLAYER_BUILD_MODE=direct to use pi-gen build.sh directly."
+  exit 1
+fi
 
 mkdir -p "${WORK_DIR}"
 
@@ -151,15 +158,25 @@ COMPRESS_IMAGE='none'
 APT_PROXY=
 EOF
 
-echo "Starting pi-gen build (this can take a long time)..."
+echo "Starting pi-gen build in '${BUILD_MODE}' mode (this can take a long time)..."
 (
   cd "${PIGEN_DIR}"
-  if [[ "${EUID}" -eq 0 ]]; then
-    ./build-docker.sh
-  elif command -v sudo >/dev/null 2>&1; then
-    sudo ./build-docker.sh
+  if [[ "${BUILD_MODE}" == "direct" ]]; then
+    if [[ "${EUID}" -eq 0 ]]; then
+      ./build.sh
+    elif command -v sudo >/dev/null 2>&1; then
+      sudo ./build.sh
+    else
+      ./build.sh
+    fi
   else
-    ./build-docker.sh
+    if [[ "${EUID}" -eq 0 ]]; then
+      ./build-docker.sh
+    elif command -v sudo >/dev/null 2>&1; then
+      sudo ./build-docker.sh
+    else
+      ./build-docker.sh
+    fi
   fi
 )
 
