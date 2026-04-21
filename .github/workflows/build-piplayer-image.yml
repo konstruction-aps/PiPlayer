@@ -24,22 +24,31 @@ jobs:
           sudo apt-get install -y rsync
 
       - name: Build image
+        id: build
+        continue-on-error: true
         run: |
           mkdir -p image-builder/work
           chmod +x image-builder/build-image.sh
           set -o pipefail
           image-builder/build-image.sh 2>&1 | tee image-builder/work/build.log
 
+      - name: Show failure log tail
+        if: steps.build.outcome == 'failure'
+        run: |
+          echo "Build failed. Showing log tail:"
+          tail -n 250 image-builder/work/build.log || true
+          exit 1
+
       - name: Upload build log
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: piplayer-build-log
           path: image-builder/work/build.log
 
       - name: Upload image artifacts
         if: success()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: piplayer-image
           path: image-builder/work/deploy/*
