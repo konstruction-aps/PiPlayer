@@ -23,7 +23,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y rsync qemu-user-static binfmt-support debootstrap dosfstools xz-utils zip unzip libarchive-tools parted quilt
+          sudo apt-get install -y rsync qemu-user-static qemu-user-binfmt-arch-test binfmt-support debootstrap dosfstools xz-utils zip unzip libarchive-tools parted quilt
 
       - name: Enable QEMU binfmt
         run: |
