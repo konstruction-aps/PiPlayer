@@ -1,0 +1,27 @@
+name: Build PiPlayer Image
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-image:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rsync
+
+      - name: Build image
+        run: |
+          chmod +x image-builder/build-image.sh
+          image-builder/build-image.sh
+
+      - name: Upload image artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: piplayer-image
+          path: image-builder/work/deploy/*

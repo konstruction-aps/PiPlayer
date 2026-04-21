@@ -1,0 +1,18 @@
+[Unit]
+Description=PiPlayer fullscreen video autoplay
+After=multi-user.target
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/PiPlayer
+StandardInput=tty
+TTYPath=/dev/tty1
+Environment=HOME=/home/pi
+ExecStart=/home/pi/PiPlayer/player.sh
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
