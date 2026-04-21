@@ -162,8 +162,13 @@ echo "Starting pi-gen build in '${BUILD_MODE}' mode (this can take a long time).
 (
   cd "${PIGEN_DIR}"
   if [[ "${BUILD_MODE}" == "direct" ]]; then
-    # pi-gen direct mode expects to run as normal user on host.
-    ./build.sh
+    if [[ "${EUID}" -eq 0 ]]; then
+      ./build.sh
+    elif command -v sudo >/dev/null 2>&1; then
+      sudo ./build.sh
+    else
+      ./build.sh
+    fi
   else
     if [[ "${EUID}" -eq 0 ]]; then
       ./build-docker.sh
