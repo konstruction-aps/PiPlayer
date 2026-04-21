@@ -154,7 +154,13 @@ EOF
 echo "Starting pi-gen build (this can take a long time)..."
 (
   cd "${PIGEN_DIR}"
-  sudo ./build-docker.sh
+  if [[ "${EUID}" -eq 0 ]]; then
+    ./build-docker.sh
+  elif command -v sudo >/dev/null 2>&1; then
+    sudo ./build-docker.sh
+  else
+    ./build-docker.sh
+  fi
 )
 
 mkdir -p "${OUT_DIR}"

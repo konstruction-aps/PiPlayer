@@ -5,10 +5,18 @@ on:
 
 jobs:
   build-image:
+    timeout-minutes: 360
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/share/dotnet
+          docker system prune -af || true
 
       - name: Install dependencies
         run: |
@@ -17,10 +25,20 @@ jobs:
 
       - name: Build image
         run: |
+          mkdir -p image-builder/work
           chmod +x image-builder/build-image.sh
-          image-builder/build-image.sh
+          set -o pipefail
+          image-builder/build-image.sh 2>&1 | tee image-builder/work/build.log
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: piplayer-build-log
+          path: image-builder/work/build.log
 
       - name: Upload image artifacts
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: piplayer-image
