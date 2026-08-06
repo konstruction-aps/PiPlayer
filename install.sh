@@ -11,7 +11,11 @@ fi
 
 echo "Installing required packages..."
 sudo apt update
-sudo apt install -y mpv fbi
+sudo apt install -y mpv fbi chromium-browser || sudo apt install -y mpv fbi chromium || sudo apt install -y mpv fbi
+
+if [ -f "${PROJECT_DIR}/lumen.env.example" ] && [ ! -f "${PROJECT_DIR}/lumen.env" ]; then
+  echo "Tip: copy lumen.env.example to lumen.env and set LUMEN_URL for cloud pages."
+fi
 
 echo "Making scripts executable..."
 chmod +x "${PROJECT_DIR}/player.sh"
