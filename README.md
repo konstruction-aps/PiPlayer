@@ -1,34 +1,56 @@
-# Pi Zero Video Player (autostart + blackout boot)
+# PiPlayer + Lumen digital signage
 
-This setup makes a Raspberry Pi Zero boot directly into fullscreen video playback from the `video` folder, with a hard-blackout style boot (minimal text/logos on screen).
+Local video player for Raspberry Pi **and** a simple cloud CMS (**Lumen**) for making screen pages — text and pictures, like old Apple iWeb — then showing them on TVs / Pi screens.
 
-## What it does
+## Lumen CMS (simple page builder)
 
-- Starts playback automatically at boot
-- Plays all supported video files in `video/`
-- Loops forever
-- Uses hard-blackout boot settings (very quiet boot output)
-- Optionally shows your own `logo.png` before videos start
-- Can build a preconfigured flashable `.img`
+```bash
+cd cms
+npm install
+npx prisma migrate dev
+npx tsx prisma/seed.ts
+npm run dev
+```
 
-## Project files
+Open [http://localhost:3000](http://localhost:3000)
 
-- `player.sh` - fullscreen player loop
-- `piplayer.service` - systemd autostart service
-- `install.sh` - one-shot installer on an existing Pi OS install
-- `video/` - put your videos here
-- `image-builder/build-image.sh` - generates a flashable Pi image with everything preinstalled
+- **Login:** `admin@lumen.local` / `admin123`
+- **Pages:** pick a theme, add text, add pictures, drag things around, save
+- **Screens:** create a screen, note the pairing code, assign a page
+- **Preview:** open `/display/<screenId>` fullscreen
+- **Pair a device:** open `/pair` on the TV/Pi browser and type the code
 
-## Option A: Install on an existing Pi OS card
+### How it feels
 
-1. Use Raspberry Pi OS Lite (32-bit recommended for Pi Zero).
-2. Copy this folder to:
-   - `/home/pi/PiPlayer`
-3. Put your video files into:
-   - `/home/pi/PiPlayer/video`
-4. Optional logo:
-   - `/home/pi/PiPlayer/logo.png`
-5. Run:
+1. New page → choose a theme  
+2. **+ Text** / **+ Picture**  
+3. Drag, resize, double-click text to edit  
+4. Save → assign to a screen  
+
+## Raspberry Pi player
+
+### Cloud page mode (recommended with Lumen)
+
+1. Install as before (`./install.sh`) — also install Chromium if needed:  
+   `sudo apt install -y chromium-browser`
+2. Create `/home/pi/PiPlayer/lumen.env`:
+
+```bash
+LUMEN_URL=http://YOUR_CMS_HOST:3000/pair
+```
+
+3. Reboot. Pair with the code from **Screens**.
+
+### Local video mode (original)
+
+Leave `lumen.env` unset and put videos in `video/`. See below.
+
+## Classic Pi Zero video install
+
+1. Raspberry Pi OS Lite (32-bit for Pi Zero)  
+2. Copy project to `/home/pi/PiPlayer`  
+3. Put videos in `video/`  
+4. Run:
 
 ```bash
 cd /home/pi/PiPlayer
@@ -37,61 +59,25 @@ chmod +x install.sh
 sudo reboot
 ```
 
-## Option B: Build a ready-to-flash image (.img)
-
-This produces a complete custom image with PiPlayer already configured.
-
-### Build requirements
-
-- Linux machine (or Linux VM)
-- Docker
-- `git`, `rsync`
-
-### Build steps
+## Flashable image
 
 ```bash
-cd /path/to/PiPlayer
 chmod +x image-builder/build-image.sh
 image-builder/build-image.sh
 ```
 
-The final image appears in:
+Or use `.github/workflows/build-piplayer-image.yml`.
 
-- `image-builder/work/deploy/`
+## Project layout
 
-### Flashing
+| Path | Purpose |
+|------|---------|
+| `cms/` | Lumen CMS + visual page editor + player APIs |
+| `player.sh` | Autostart: Lumen kiosk **or** local mpv loop |
+| `install.sh` | Pi OS installer |
+| `video/` | Local fallback videos |
+| `lumen.env.example` | Sample CMS URL config for the Pi |
 
-Use either:
+## Supported local video formats
 
-- Raspberry Pi Imager (`Use custom` and pick the `.img`)
-- balenaEtcher
-
-## Optional: Build image in GitHub Actions
-
-If this repo is on GitHub, run the workflow:
-
-- `.github/workflows/build-piplayer-image.yml`
-
-Then download the `piplayer-image` artifact and flash it.
-
-## Supported video formats
-
-- `.mp4`
-- `.mkv`
-- `.mov`
-- `.avi`
-- `.webm`
-
-## Control / troubleshooting
-
-- Check service status:
-  - `sudo systemctl status piplayer.service`
-- View logs:
-  - `journalctl -u piplayer.service -b`
-- Restart player:
-  - `sudo systemctl restart piplayer.service`
-
-## Notes
-
-- The boot cannot be made physically perfect-black from power-on on all displays, because some monitors briefly show sync messages. This config removes almost all Linux boot text/logos.
-- Default image credentials in builder config are currently `pi` / `raspberry`. Change that in `image-builder/build-image.sh` before distribution.
+`.mp4` `.mkv` `.mov` `.avi` `.webm`

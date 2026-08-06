@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Screen {
+  id          String    @id @default(cuid())
+  name        String
+  location    String?
+  pairingCode String    @unique
+  deviceToken String?   @unique
+  status      String    @default("offline") // online | offline | pairing
+  lastSeenAt  DateTime?
+  layoutId    String?
+  layout      Layout?   @relation(fields: [layoutId], references: [id], onDelete: SetNull)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Layout {
+  id               String          @id @default(cuid())
+  name             String
+  width            Int             @default(1920)
+  height           Int             @default(1080)
+  backgroundColor  String          @default("#0B1220")
+  backgroundImage  String?
+  theme            String          @default("blank")
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  elements         LayoutElement[]
+  screens          Screen[]
+}
+
+model LayoutElement {
+  id        String   @id @default(cuid())
+  layoutId  String
+  layout    Layout   @relation(fields: [layoutId], references: [id], onDelete: Cascade)
+  type      String // text | image
+  x         Float    @default(100)
+  y         Float    @default(100)
+  width     Float    @default(400)
+  height    Float    @default(120)
+  rotation  Float    @default(0)
+  zIndex    Int      @default(1)
+  // text fields
+  content   String?
+  fontFamily String? @default("Georgia, serif")
+  fontSize  Int?     @default(48)
+  fontWeight String? @default("400")
+  color     String?  @default("#FFFFFF")
+  textAlign String?  @default("left")
+  // image fields
+  imageUrl  String?
+  objectFit String?  @default("cover")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([layoutId, zIndex])
+}
+
+model MediaAsset {
+  id        String   @id @default(cuid())
+  name      String
+  filename  String
+  mimeType  String
+  sizeBytes Int
+  createdAt DateTime @default(now())
+}
