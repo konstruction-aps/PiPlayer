@@ -1,0 +1,18 @@
+# Example pct create settings matching create-lxc.sh defaults.
+# Apply nesting after create if needed:
+#   pct set 200 --features nesting=1
+#
+# Recommended starting resources (small warehouse):
+#   CTID:        200
+#   Hostname:    wms
+#   Template:    ubuntu-24.04-standard
+#   Unprivileged: yes
+#   Nesting:     yes (required for Docker-in-LXC)
+#   Cores:       4
+#   Memory:      8192 MB
+#   Disk:        64 GB
+#   Bridge:      vmbr0
+#   IP:          dhcp or static CIDR (e.g. 192.168.1.50/24)
+#
+# Snapshot reminder (Proxmox UI or CLI):
+#   pct snapshot 200 pre-deploy --description "Before WMS deploy"

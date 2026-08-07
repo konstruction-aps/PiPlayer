@@ -1,0 +1,4 @@
+{$WMS_SITE_ADDRESS} {
+	encode gzip
+	reverse_proxy app:8000
+}

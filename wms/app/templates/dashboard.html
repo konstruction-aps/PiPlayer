@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WMS</title>
+  <style>
+    :root {
+      --bg: #0f1c18;
+      --panel: #173028;
+      --ink: #e8f2ec;
+      --muted: #9bb5a8;
+      --accent: #3d9b6a;
+      --line: #2a4a3c;
+      --warn: #c9883a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+      background:
+        radial-gradient(1200px 600px at 10% -10%, #1d3d30 0%, transparent 55%),
+        radial-gradient(900px 500px at 100% 0%, #243528 0%, transparent 50%),
+        var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+    header {
+      padding: 1.5rem 2rem 0.5rem;
+      border-bottom: 1px solid var(--line);
+    }
+    header h1 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3rem);
+      letter-spacing: 0.04em;
+      font-weight: 700;
+    }
+    header p {
+      margin: 0.35rem 0 1rem;
+      color: var(--muted);
+      max-width: 40rem;
+    }
+    main {
+      display: grid;
+      gap: 1.25rem;
+      padding: 1.25rem 2rem 2rem;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+    section {
+      background: color-mix(in srgb, var(--panel) 88%, black);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 1rem 1.1rem 1.15rem;
+    }
+    section h2 {
+      margin: 0 0 0.75rem;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+    }
+    th, td {
+      text-align: left;
+      padding: 0.4rem 0.35rem;
+      border-bottom: 1px solid var(--line);
+    }
+    th { color: var(--muted); font-weight: 600; }
+    form {
+      display: grid;
+      gap: 0.55rem;
+    }
+    label {
+      display: grid;
+      gap: 0.25rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    input, select, button {
+      font: inherit;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      padding: 0.55rem 0.65rem;
+      background: #10241c;
+      color: var(--ink);
+    }
+    button {
+      background: var(--accent);
+      border-color: transparent;
+      color: #04140c;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 0.25rem;
+    }
+    button:hover { filter: brightness(1.08); }
+    .wide { grid-column: 1 / -1; }
+    .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>WMS</h1>
+    <p>Warehouse inventory, locations, and stock movements on your Proxmox LXC stack.</p>
+  </header>
+  <main>
+    <section>
+      <h2>Inventory</h2>
+      <table>
+        <thead><tr><th>SKU</th><th>Location</th><th>Qty</th></tr></thead>
+        <tbody>
+        {% for row in inventory if row.quantity %}
+          <tr>
+            <td class="mono">{{ row.product.sku }}</td>
+            <td class="mono">{{ row.location.code }}</td>
+            <td>{{ row.quantity }} {{ row.product.unit }}</td>
+          </tr>
+        {% else %}
+          <tr><td colspan="3">No stock on hand</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Receive</h2>
+      <form method="post" action="/ui/receive">
+        <label>SKU
+          <select name="sku" required>
+            {% for p in products %}<option value="{{ p.sku }}">{{ p.sku }} — {{ p.name }}</option>{% endfor %}
+          </select>
+        </label>
+        <label>Location
+          <select name="location_code" required>
+            {% for loc in locations %}<option value="{{ loc.code }}">{{ loc.code }} — {{ loc.name }}</option>{% endfor %}
+          </select>
+        </label>
+        <label>Quantity <input type="number" name="quantity" min="1" value="1" required></label>
+        <label>Note <input type="text" name="note" placeholder="PO / ASN"></label>
+        <button type="submit">Receive stock</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>Ship</h2>
+      <form method="post" action="/ui/ship">
+        <label>SKU
+          <select name="sku" required>
+            {% for p in products %}<option value="{{ p.sku }}">{{ p.sku }} — {{ p.name }}</option>{% endfor %}
+          </select>
+        </label>
+        <label>From location
+          <select name="location_code" required>
+            {% for loc in locations %}<option value="{{ loc.code }}">{{ loc.code }} — {{ loc.name }}</option>{% endfor %}
+          </select>
+        </label>
+        <label>Quantity <input type="number" name="quantity" min="1" value="1" required></label>
+        <label>Note <input type="text" name="note" placeholder="Order #"></label>
+        <button type="submit">Ship stock</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>Transfer</h2>
+      <form method="post" action="/ui/transfer">
+        <label>SKU
+          <select name="sku" required>
+            {% for p in products %}<option value="{{ p.sku }}">{{ p.sku }} — {{ p.name }}</option>{% endfor %}
+          </select>
+        </label>
+        <label>From
+          <select name="from_location_code" required>
+            {% for loc in locations %}<option value="{{ loc.code }}">{{ loc.code }}</option>{% endfor %}
+          </select>
+        </label>
+        <label>To
+          <select name="to_location_code" required>
+            {% for loc in locations %}<option value="{{ loc.code }}">{{ loc.code }}</option>{% endfor %}
+          </select>
+        </label>
+        <label>Quantity <input type="number" name="quantity" min="1" value="1" required></label>
+        <label>Note <input type="text" name="note"></label>
+        <button type="submit">Transfer</button>
+      </form>
+    </section>
+
+    <section class="wide">
+      <h2>Recent movements</h2>
+      <table>
+        <thead><tr><th>ID</th><th>Reason</th><th>Product</th><th>Qty</th><th>From</th><th>To</th><th>When</th></tr></thead>
+        <tbody>
+        {% for m in movements %}
+          <tr>
+            <td>{{ m.id }}</td>
+            <td>{{ m.reason }}</td>
+            <td class="mono">{{ m.product_id }}</td>
+            <td>{{ m.quantity }}</td>
+            <td class="mono">{{ m.from_location_id or "—" }}</td>
+            <td class="mono">{{ m.to_location_id or "—" }}</td>
+            <td>{{ m.created_at }}</td>
+          </tr>
+        {% else %}
+          <tr><td colspan="7">No movements yet</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </section>
+  </main>
+</body>
+</html>
