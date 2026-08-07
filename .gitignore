@@ -1,2 +1,6 @@
 .DS_Store
 image-builder/work/
+wms/.env
+wms/backups/
+wms/app/__pycache__/
+*.pyc
